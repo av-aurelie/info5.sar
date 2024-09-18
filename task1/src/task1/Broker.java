@@ -5,6 +5,12 @@ package task1;
  * A broker is a middleware enableling services to communicate with each others 
  * by routing and delivering messages.*/
 
+/* There is no precedence between connect and accept, this is a symmetrical rendez-vous: 
+ * the first operation waits for the second one. 
+ * Both accept and connect operations are therefore blocking calls, 
+ * blocking until the rendez-vous happens, 
+ * both returning a fully connected and usable full-duplex channel. */
+
 abstract class Broker {
 	
 	/*Creation of a new broker. 
@@ -14,17 +20,21 @@ abstract class Broker {
 	
 	Broker(String name);
 	
+	
 	/*Creation of a channel to enable the communication. 
-	 * @param : port to listen on. 
+	 * @param : port to listen on.
 	 * @return : the channel representing the connection for the communication. 
 	 * Will return null if there is a problem. */
 
 	Channel accept(int port);
 	
-	/*Establish connection between a broker and a channel. 
+	
+	/*Establish a channel. 
+	 * connect block until there is a matching accept. 
 	 * @param name of the broker
-	 * @param port of the channel.
-	 * @return the channel that has been connected*/
+	 * @param port of an accept on the remote broker name
+	 * @return the channel that has been constructed and connected or null if the name of the remote
+	 * broker is not found. */
 
 	Channel connect(String name, int port);
 }

@@ -21,13 +21,15 @@ public class EchoServer extends Task {
 	 * @param channel used by the client to send the information*/
 	private static void HandleClient(Channel channel) {
 
-		// Create a buffer with a size of 256 bytes
-		byte[] buffer = new byte[256];
-		int bytesRead;
+		// Creation of a circular buffer
+		CircularBuffer buffer = new CircularBuffer(new byte[256]);
+		byte[] tempBuffer = new byte[1]; //buffer to hold incoming data
 
 		// Read data from the client and echo it back
-		while ((bytesRead = channel.read(buffer, 0, buffer.length)) != -1) {
-			channel.write(buffer, 0, bytesRead);
+		while ((channel.read(tempBuffer, 0, tempBuffer.length)) != -1) {
+			buffer.push(tempBuffer[0]);
+			byte dataEcho = buffer.pull();
+			channel.write( new byte[]{dataEcho}, 0, 1);
 		}
 
 		// Close the connection once all messages have been read

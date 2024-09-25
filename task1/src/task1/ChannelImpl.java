@@ -9,8 +9,15 @@ public class ChannelImpl extends Channel{
 	// where the
 	// other broker is connected and reads
 	ChannelImpl exit;
-
 	boolean connected;
+	boolean exitCo; //if exit is not co, then this will soon be disco too
+	
+	int port;
+	
+	public ChannelImpl(Broker b, int port) {
+		this.bName = b.name;
+		this.port = port;
+	}
 
 	CircularBuffer buffer = new CircularBuffer(256);
 

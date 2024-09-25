@@ -16,21 +16,26 @@ public class BrokerImpl extends Broker {
 		rdvList = new HashMap<>();
 	}
 
-	public synchronized Channel accept(int port) throws Exception {
+	@Override
+	public Channel accept(int port) throws Exception {
 
 		// is the rdv already created ?
-		if (rdvList.containsKey(port)) {
-			// is an accept already on this port ?
-			if (rdvList.get(port).ba != null)
-				throw new Exception("accept : an accept is already on the port :" + port);
 
+		synchronized (rdvList) {
+			if (rdvList.containsKey(port)) {
+				// is an accept already on this port ?
+				if (rdvList.get(port).ba != null)
+					throw new Exception("accept : an accept is already on the port :" + port);
+
+			}
+
+			// creation of the rdv
+			else
+				rdvList.put(port, new RendezVous());
 		}
-		// creation of the rdv
-		else
-			rdvList.put(port, new RendezVous());
 
 		RendezVous rdv = rdvList.get(port);
-		Channel rdvChannel = rdv.accept(this);
+		Channel rdvChannel = rdv.accept(this, port);
 
 		// End of the rdv
 		rdvList.remove(port);
@@ -39,16 +44,18 @@ public class BrokerImpl extends Broker {
 
 	}
 
-	public synchronized Channel connect(String name, int port) throws Exception {
+	@Override
+	public Channel connect(String name, int port) throws Exception {
 
 		// if the rdv is not created yet
-		if (!rdvList.containsKey(port)) {
-			rdvList.put(port, new RendezVous());
+		synchronized (rdvList) {
+			if (!rdvList.containsKey(port)) {
+				rdvList.put(port, new RendezVous());
+			}
 		}
 		RendezVous rdv = rdvList.get(port);
-		Channel rdvChannel = rdv.connect(this);
+		Channel rdvChannel = rdv.connect(this, port);
 
-		
 		return rdvChannel;
 
 	}

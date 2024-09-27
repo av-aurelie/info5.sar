@@ -8,7 +8,7 @@ public class TestClient {
 	//Number of the port used for the connection
 	private static int PORT = 8080;
 	
-	public void main() {
+	public void main() throws Exception {
 		
 		Broker broker = Task.getBroker();
 		

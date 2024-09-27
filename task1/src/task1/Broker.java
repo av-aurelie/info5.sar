@@ -1,5 +1,6 @@
 package task1;
 
+
 /*
  * Representation of a broker. 
  * A broker is a middleware enableling services to communicate with each others 
@@ -13,20 +14,24 @@ package task1;
 
 abstract class Broker {
 	
+	public String name;
+	
+	
 	/*Creation of a new broker. 
 	 * The broker is identify by its name. 
 	 * Name has to be unique. 
 	 * @param : name of the broker*/
 	
-	Broker(String name);
-	
+	Broker(String name) {
+		this.name = name;
+	}
 	
 	/*Creation of a channel to enable the communication. 
 	 * @param : port to listen on.
 	 * @return : the channel representing the connection for the communication. 
 	 * Will return null if there is a problem. */
-
-	Channel accept(int port);
+	
+	abstract Channel accept(int port) throws Exception;
 	
 	
 	/*Establish a channel. 
@@ -36,5 +41,7 @@ abstract class Broker {
 	 * @return the channel that has been constructed and connected or null if the name of the remote
 	 * broker is not found. */
 
-	Channel connect(String name, int port);
+	abstract Channel connect(String name, int port) throws Exception;
+	
+
 }

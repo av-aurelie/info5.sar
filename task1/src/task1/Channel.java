@@ -9,7 +9,9 @@ package task1;
  * There is no notion of the end of stream for a connected stream. 
  * To mark the end of a stream, the corresponding channel is simply disconnected.*/
 
+
 abstract class Channel {
+	
 	
 	/*To read data from a bytes array strarting at the given offset.
 	 * If 0 is about to be returned, the method blocks until there is things to read. 
@@ -18,9 +20,9 @@ abstract class Channel {
 	 * @param offset the place number in the arrays where the reading will start
 	 * @param lengh the number max of bytes that will be read 
 	 * @return the number of bytes read   */
-	
-	int read(byte[] bytes, int offset, int length);
 
+	abstract int read(byte[] bytes, int offset, int length) throws InterruptedException;
+	
 	
 	/*To write data from a bytes array strating at the given offset.
 	 * Write one byte at a time in the stream. 
@@ -34,18 +36,20 @@ abstract class Channel {
 	 * @param lengh the number max of bytes that will be written 
 	 * @return the number of bytes written */
 	
-	int write(byte[] bytes, int offset, int length);
-
+	abstract int write(byte[] bytes, int offset, int length) throws Exception;
+	
 	
 	/*Disconnect the channel if connected, nothing if it is already disconnected.
 	 * The local side will be disconnected only once the remote side has been disconnected
 	 * ans there are no more in-transit bytes to read.
 	 * The channel can be disconnected at any time and from either side.*/
 	
-	void disconnect();
+	abstract void disconnect();
+	
 	
 	/*Check the connection status of a channel.
 	 * @return true if disconnected and false if it's not.*/
+	
+	abstract boolean disconnected();
 
-	boolean disconnected();
 }

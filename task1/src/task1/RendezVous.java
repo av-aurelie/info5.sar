@@ -56,6 +56,9 @@ public class RendezVous {
 			}
 		}
 
+		ca = new ChannelImpl(b, port);
+		if(cc != null)
+			cc.exit = ca;
 		//createChannelsForRdv();
 		notify();
 		return ca;

@@ -117,6 +117,12 @@ public class ChannelImpl extends Channel {
 		// if disconnected, nothing to do
 		return;
 	}
+	
+	public void connect(ChannelImpl c,String name) {
+		this.exit = c;
+		exit.exit = this;
+		
+	}
 
 	boolean disconnected() {
 		return !connected;

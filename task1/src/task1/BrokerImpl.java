@@ -12,6 +12,7 @@ public class BrokerImpl extends Broker {
 
 	public BrokerImpl(String name) {
 		super(name);
+		this.name = name;
 		BrokerManager.addBroker(this);
 		rdvList = new HashMap<>();
 	}

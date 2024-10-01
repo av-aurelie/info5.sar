@@ -13,7 +13,7 @@ abstract class Task extends Thread {
 	 * @return the task created */
 
 	private static Broker broker;
-	private Runnable task;
+	 Runnable task;
 
 	Task(Broker b, Runnable r) {
 

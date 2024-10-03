@@ -21,6 +21,11 @@ abstract class Channel {
 	 * @param lengh the number max of bytes that will be read 
 	 * @return the number of bytes read   */
 
+	public Channel(Broker b) {
+		// TODO Auto-generated constructor stub
+	}
+
+
 	abstract int read(byte[] bytes, int offset, int length) throws InterruptedException;
 	
 	

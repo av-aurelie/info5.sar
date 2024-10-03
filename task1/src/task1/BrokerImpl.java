@@ -7,58 +7,55 @@ public class BrokerImpl extends Broker {
 
 	public String name;
 
-	// list of rdv
-	public Map<Integer, RendezVous> rdvList;
+	// list of accepts
+	public Map<Integer, RendezVous> acceptList; 
 
 	public BrokerImpl(String name) {
 		super(name);
 		this.name = name;
 		BrokerManager.addBroker(this);
-		rdvList = new HashMap<>();
+		acceptList = new HashMap<>();
 	}
 
 	@Override
 	public Channel accept(int port) throws Exception {
-
-		// is the rdv already created ?
-
-		synchronized (rdvList) {
-			if (rdvList.containsKey(port)) {
-				// is an accept already on this port ?
-				if (rdvList.get(port).ba != null)
-					throw new Exception("accept : an accept is already on the port :" + port);
-
+		RendezVous rdv = null;
+		synchronized (acceptList) {
+			rdv = acceptList.get(port);
+			if (rdv != null) {
+				throw new IllegalStateException();
 			}
+			rdv = new RendezVous();
 
-			// creation of the rdv
-			else
-				rdvList.put(port, new RendezVous());
+			acceptList.put(port, rdv);
+			acceptList.notifyAll();
 		}
-
-		RendezVous rdv = rdvList.get(port);
-		Channel rdvChannel = rdv.accept(this, port);
-
-		// End of the rdv
-		rdvList.remove(port);
-		BrokerManager.brokers.notifyAll();
-		return rdvChannel;
-
+		return rdv.accept(this, port);
 	}
 
 	@Override
 	public Channel connect(String name, int port) throws Exception {
+		BrokerImpl b = BrokerManager.getBroker(name);
+		if (b == null)
+			return null;
+		return b._connect(this, port);
+	}
 
-		// if the rdv is not created yet
-		synchronized (rdvList) {
-			if (!rdvList.containsKey(port)) {
-				rdvList.put(port, new RendezVous());
+	private Channel _connect(BrokerImpl b, int port) throws Exception {
+		RendezVous rdv = null;
+		synchronized (acceptList) {
+			rdv = acceptList.get(port);
+			while (rdv == null) {
+				try {
+					acceptList.wait();
+				} catch (InterruptedException e) {
+					// Do nothing
+				}
 			}
+			rdv = acceptList.get(port);
 		}
-		RendezVous rdv = rdvList.get(port);
-		Channel rdvChannel = rdv.connect(this, port);
-
-		return rdvChannel;
-
+		acceptList.remove(port);
+		return rdv.connect(b, port);
 	}
 
 }

@@ -8,7 +8,7 @@ public class BrokerManager {
 	
 	static Map<String, BrokerImpl> brokers = new HashMap<>();
 	
-	public synchronized BrokerImpl getBroker (String name) {
+	public synchronized static BrokerImpl getBroker (String name) {
 		BrokerImpl broker = brokers.get(name);
 		if(broker != null)
 			return broker;

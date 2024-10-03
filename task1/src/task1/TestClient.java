@@ -1,60 +1,145 @@
 package task1;
 
 /* This class is used to test the broker using the echo server.
- * It simulates client sending an array of bytes to the echo server via Channel. */
+ * It simulates multiple clients sending an array of bytes to the echo server via Channel. */
 
 public class TestClient {
 
-    // Number of the port used for the connection
-    private static final int PORT = 8080;
+	public static void main(String[] args) throws InterruptedException {
 
-    public static void main(String[] args) throws Exception {
+		// test1();
+		test2();
+		test3();
+	}
 
-        // Creation of a new broker
-        BrokerImpl broker = new BrokerImpl("EchoServer");
+	// test of echoserver
+	static void test1() throws InterruptedException {
+		Broker broker = new BrokerImpl("EchoServer");
 
-        // Initialize and start the echo server
-        EchoServer server = new EchoServer(broker);
+		// Start the Echo server
+		EchoServer server = new EchoServer(broker, 8080);
+		server.start();
 
-        // Start the server task using an anonymous subclass of Task
-        Task serverTask = new Task(broker, () -> {
-            try {
-                server.run();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }) {
-            @Override
-            public void run() {
-                task.run();
-            }
-        };
-        serverTask.start();
+		int numberOfClients = 10;
 
-        // Give the server some time to start up
-        Thread.sleep(1000);
+		// Create and start 10 clients with a 1 second delay between each
+		for (int i = 1; i <= numberOfClients; i++) {
+			final int clientId = i;
+			new Thread(() -> {
+				try {
+					Broker clientBroker = new BrokerImpl("Client" + clientId);
+					Channel clientChannel = clientBroker.connect("EchoServer", 8080);
+					System.out.println("Client" + clientId + ": Connected to server!");
 
-        // Connect the client to the broker (EchoServer)
-        Channel channel = broker.connect("EchoServer", PORT);
+					// Example message: each client sends its clientId
+					byte[] message = new byte[] { 1, 2, 3, 4, 5 };
+					clientChannel.write(message, 0, message.length); // Send message
 
-        // Sequence from 1 to 255 sent from the client to the server
-        for (int i = 1; i < 255; i++) {
-            byte[] dataSent = new byte[]{(byte) i};
-            channel.write(dataSent, 0, dataSent.length);
+					// Read the echoed message from the server
+					byte[] buffer = new byte[message.length];
+					int bytesRead = clientChannel.read(buffer, 0, buffer.length); // Read response
 
-            byte[] buffer = new byte[1];
-            int nbBytes = channel.read(buffer, 0, buffer.length);
+					// Print the echoed bytes
+					System.out.println("Client" + clientId + ": Echoed bytes: ");
+					for (int j = 0; j < bytesRead; j++) {
+						System.out.println("Byte " + j + ": " + buffer[j]);
+					}
 
-            // Check if the server echoes correctly
-            if (buffer[0] == i && nbBytes == 1) {
-                System.out.println("Byte " + i + " OK! Echoed correctly.");
-            } else {
-                System.err.println("Byte " + i + " KO!!! Echo mismatch.");
-            }
-        }
+					// Disconnect the client
+					clientChannel.disconnect();
+					System.out.println("Client" + clientId + ": Disconnected from server!");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}).start();
 
-        // Stop communication
-        channel.disconnect();
-        System.out.println("Test complete. Disconnected.");
-    }
+			// Wait for 1 second before creating the next client
+			Thread.sleep(500);
+		}
+	}
+
+	// test where we have a connect before the accept
+	static void test2() {
+		BrokerImpl connector = new BrokerImpl("connector");
+		BrokerImpl acceptor = new BrokerImpl("acceptor");
+		int port = 8080;
+		RendezVous rendezVous = new RendezVous();
+
+		// Task 1: Connecting the connector before the acceptor is ready to accept
+		var task1 = new Thread(() -> {
+		    try {
+		        rendezVous.connect(acceptor, port);
+		    } catch (Exception e) {
+		        System.err.println("Error in task1 (test2) (connect): " + e.getMessage());
+		        e.printStackTrace();
+		    }
+		});
+
+		// Task 2: Accepting the connection after the connector has tried to connect
+		var task2 = new Thread(() -> {
+		    try {
+		        rendezVous.accept(connector, port);
+		    } catch (Exception e) {
+		        System.err.println("Error in task2 (test2) (accept): " + e.getMessage());
+		        e.printStackTrace();
+		    }
+		});
+
+		// Start both threads
+		task1.start();
+		task2.start();
+
+		// Join threads to wait for them to complete
+		try {
+			task1.join();
+			task2.join();
+		} catch (InterruptedException e) {
+			System.out.println("test2 : something goes wrong");
+		}
+
+		System.out.println("test2 : nothing goes wrong");
+
+	}
+
+	/* test where we have the accept before the connect */
+	static void test3() {
+		BrokerImpl connector = new BrokerImpl("connector");
+		BrokerImpl acceptor = new BrokerImpl("acceptor");
+		RendezVous rendezVous = new RendezVous();
+		int port = 8080;
+
+		// Task 1: Accepting a connection before the connector attempts to connect
+		var task1 = new Thread(() -> {
+		    try {
+		        rendezVous.accept(connector, port);
+		    } catch (Exception e) {
+		        System.err.println("Error in task1 (test3) (accept): " + e.getMessage());
+		        e.printStackTrace();
+		    }
+		});
+		// Task 2: Connecting after the acceptor has already started accepting
+		var task2 = new Thread(() -> {
+		    try {
+		        rendezVous.connect(acceptor, port);
+		    } catch (Exception e) {
+		        System.err.println("Error in task2 (test3) (connect): " + e.getMessage());
+		        e.printStackTrace();
+		    }
+		});
+
+		// Start both threads
+		task1.start();
+		task2.start();
+
+		// Join threads to wait for them to complete
+		try {
+			task1.join();
+			task2.join();
+		} catch (InterruptedException e) {
+			System.out.println("test3 : something goes wrong");
+		}
+
+		System.out.println("test3 : nothing goes wrong");
+	}
+
 }

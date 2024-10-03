@@ -1,56 +1,79 @@
 package task1;
 
+public class EchoServer {
 
-/* Echo server that accepts multiple clients and echoes back what they send */
-public class EchoServer extends Task {
+    private final Broker broker;
+    private final int port;
+    private boolean running;
 
-	public EchoServer(Broker broker) {
-		super(broker, () -> {
-			//
-			while (true) {
-				// Accept a new connection
-				Channel channel;
-				try {
-					channel = broker.accept(8080);
-					// Handle the connection in a new thread
-					new Thread(() -> {
-						try {
-							HandleClient(channel);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}).start();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+    public EchoServer(Broker broker, int port) {
+        this.broker = broker;
+        this.port = port;
+        this.running = true; // Server is running initially
+    }
 
-				
-			}
-		});
-	}
+    public void start() {
+        new Thread(() -> {
+            while (running) {
+                try {
+                    System.out.println("Server: Waiting for a new connection on port " + port + "...");
 
-	/*Is used to process interaction between a client and the server
-	 * @param channel used by the client to send the information*/
-	private static void HandleClient(Channel channel) throws InterruptedException, Exception {
+                    // Accept a new connection
+                    ChannelImpl channel = (ChannelImpl) broker.accept(port);
 
-		// Creation of a circular buffer
-		CircularBuffer buffer = new CircularBuffer(256);
-		byte[] tempBuffer = new byte[1]; //buffer to hold incoming data
+                    if (channel != null) {
+                        System.out.println("Server: Connection accepted from client.");
 
-		// Read data from the client and echo it back
-		while ((channel.read(tempBuffer, 0, tempBuffer.length)) != -1) {
-			buffer.push(tempBuffer[0]);
-			byte dataEcho = buffer.pull();
-			channel.write( new byte[]{dataEcho}, 0, 1);
-		}
+                        // Handle the connection in a separate thread to allow multiple clients
+                        new Thread(() -> {
+                            try {
+                                handleClient(channel);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }).start(); // A new thread is started for each client
+                    } else {
+                        System.out.println("Server: No connection accepted.");
+                    }
 
-		// Close the connection once all messages have been read
-		channel.disconnect();
+                } catch (Exception e) {
+                    System.out.println("Server: Exception during connection acceptance.");
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
 
-	}
+    /* Stops the server from running */
+    //never used for the moment
+    public void stop() {
+        System.out.println("Server: Stopping...");
+        running = false; // Set the flag to stop the server
+    }
+
+    /*
+     * Handles the interaction between a client and the server
+     * 
+     * @param channel used by the client to send the information
+     */
+    private static void handleClient(ChannelImpl channel) throws InterruptedException, Exception {
+        System.out.println("Server: Handling client connection...");
+
+        byte[] buffer = new byte[256];
+        CircularBuffer circularBuffer = new CircularBuffer(256);
+
+        while (channel.exitCo) {
+            int bytesRead = channel.read(buffer, 0, buffer.length);
+
+            for (int i = 0; i < bytesRead; i++) {
+                circularBuffer.push(buffer[i]);
+            }
+
+            // Echoes back the data
+            channel.write(circularBuffer.m_bytes, 0, bytesRead);
+        }
+
+        System.out.println("Server: Client disconnected.");
+        channel.disconnect();
+    }
 }

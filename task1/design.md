@@ -59,3 +59,63 @@ Each buffer is aliased from both sides and the aliasing is crossed ( -> if it us
 
 When there is a disconnection from on side of the buffer, there is a checking to see if the buffer is empty. If it's not empty, the broker that is reading needs to still read until the buffer is empty and then disconnect from its side. 
 
+## Class MessageQueue :
+
+## Class QueueBroker :
+
+The QueueBroker class functionment is similar to the class Broker but instead of working with bytes and channels, it will work with MessageQueue and messages (tabl of bytes). 
+
+
+
+### Method  String  name() :
+
+As we implement a QueueBroker with a Broker, we can just take the same name for both. Then this method will just return the name of the broker. 
+
+### Method MessageQueue  accept(int  port) :
+
+Same method as in task1. So we will just use the method from BrokerImpl and cast it to be a MessageQueue. As messageQueue use channel, it should work. 
+
+
+### Method MessageQueue  conenct(String  name, int  port) :
+
+As for accept, we will use the method from task1 and cast the result. 
+
+
+
+## Class MessageQueue :
+
+Two mutex need to be initialized here to be used in methods send and receive (one mutex by method). 
+
+```
+Semaphore mutexSend = new Semaphore(1);
+Semaphore mutexReceive = new Semaphore(1);
+```
+
+The connection will be made with a channel.
+
+As the length of a message is not fixed, we will send an int at the beginning of the array so we'll be able to know how many bytes we need to read or to write. 
+
+### Method void  send(byte[]  bytes,  int  offset,  int  length) :
+Use of a **mutex** to avoid several threads to write at the same time. If several threads write at the same time, it could corrupt the message. 
+
+At the beginning of the method, we'll put an acquire() for the mutex. The mutex is released at the end of the method. 
+
+The channel used for the MessageQueue will write byte by byte the message (use of the method *write* from the task1). 
+
+### Method byte[]  receive() : 
+We will also use a mutex for the same reason as the precedent method. 
+
+As for the other method, the mutex will need to been acquired at the beginning and then released at the end of the method. 
+
+The channel used for the MessageQueue will read byte by byte the message (use of the method *read* from the task1). 
+
+
+### Method void  close() :
+
+As the connection is made with a channel, we need to disconnect the channel to close tu MessageQueue. 
+
+### Method void  closed() :
+
+We need to know if the channel is disconnected or not. 
+
+

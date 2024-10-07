@@ -7,7 +7,7 @@ package task1;
  */
 public class CircularBuffer {
 	volatile int m_tail, m_head;
-	volatile byte m_bytes[];
+	public volatile byte m_bytes[];
 
 	public CircularBuffer(int capacity) {
 		m_bytes = new byte[capacity];

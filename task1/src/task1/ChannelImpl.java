@@ -122,7 +122,7 @@ public class ChannelImpl extends Channel {
 
 	}
 
-	boolean disconnected() {
+	public boolean disconnected() {
 		return !this.connected;
 	}
 

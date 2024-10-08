@@ -19,12 +19,14 @@ public class MQTest {
         BrokerImpl connector = new BrokerImpl("connector");
         BrokerImpl acceptor = new BrokerImpl("acceptor");
         int port = 8080;
-        QueueBroker queueBroker = new QueueBroker(connector);
+        QueueBroker qConnector = new QueueBrokerImpl(connector);
+        QueueBroker qAcceptor = new QueueBrokerImpl(acceptor);
 
         // Task 1: Connecting the connector before the acceptor is ready to accept
         var task1 = new Thread(() -> {
             try {
-                MessageQueue queue = queueBroker.connect("acceptor", port);
+            	Thread.sleep(500);
+                MessageQueue queue = qConnector.connect(qAcceptor.name(), port);
                 System.out.println("Connection established from connector.");
                 
                 // Sending all messages from testMessage
@@ -42,7 +44,7 @@ public class MQTest {
         // Task 2: Accepting the connection after the connector has tried to connect
         var task2 = new Thread(() -> {
             try {
-                MessageQueue queue = queueBroker.accept(port);
+                MessageQueue queue = qAcceptor.accept(port);
                 System.out.println("Connection accepted by acceptor.");
                 
                 // Receiving all messages
@@ -76,7 +78,7 @@ public class MQTest {
     static void test2() {
         BrokerImpl connector = new BrokerImpl("connector");
         BrokerImpl acceptor = new BrokerImpl("acceptor");
-        QueueBroker queueBroker = new QueueBroker(acceptor);
+        QueueBroker queueBroker = new QueueBrokerImpl(acceptor);
         int port = 8080;
 
         // Task 1: Accepting a connection before the connector attempts to connect

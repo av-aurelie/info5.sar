@@ -10,7 +10,7 @@ package task1;
  * To mark the end of a stream, the corresponding channel is simply disconnected.*/
 
 
-abstract class Channel {
+public abstract class Channel {
 	
 	
 	/*To read data from a bytes array strarting at the given offset.

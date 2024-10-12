@@ -1,5 +1,7 @@
 # Design of the code : 
 
+# Threaded channels :
+
 ## Class Broker : 
 
 The broker needs to keep track of the ongoing accept list since it can handle multiple tasks simultaneously. This class must be thread-safe for connect and accept operations.  
@@ -58,6 +60,9 @@ Each buffer is aliased from both sides and the aliasing is crossed ( -> if it us
 ### Disconnect 
 
 When there is a disconnection from on side of the buffer, there is a checking to see if the buffer is empty. If it's not empty, the broker that is reading needs to still read until the buffer is empty and then disconnect from its side. 
+
+
+# Message queue : 
 
 ## Class MessageQueue :
 
@@ -119,3 +124,64 @@ As the connection is made with a channel, we need to disconnect the channel to c
 We need to know if the channel is disconnected or not. 
 
 
+# Mixed execution: threaded channels and event-oriented queues :
+
+## Queue broker : 
+
+
+The `QueueBroker` class functions similarly to the `Broker` class but handles **MessageQueues** instead of channels. It establishes and manages the communication between brokers through message queues. The key difference is that the `QueueBroker` will now use an **event-driven** approach, relying on listeners to handle connection events.
+
+### Listeners interfaces :
+
+The `QueueBroker` will have two types of listeners: `AcceptListener` and `ConnectListener`. These listeners react to connection events: when another broker tries to accept or connect. When a connection request is detected, the listener invokes the appropriate method (`accept` or `connect`) to establish the connection.
+
+Synchronized blocks or mutex as in task 2 (for the message queue) will be needed to access to shared ressources (where we write and read for example) safely.
+
+
+
+## Message queue : 
+
+As the queueBroker, the job of a message queue is similar to the one from the task 2: Managing the  transmission of messages between two `QueueBroker` instances.
+
+But this time, this will use a `Listener` to handle events like message reception or queue closure.
+
+As in the previous design, two mutexes are used to synchronize access to the send and receive operations, preventing multiple threads from writing or reading simultaneously.
+
+As for the precedent implementation too, an integer is sent at the start of each message to indicate its length, ensuring that the receiving end knows how many bytes to read.
+
+### Event handling :
+
+MessageQueue will have listeners that react to message reception and queue closure events.
+
+When the listener that reacts to message reception (`received`) will be triggered, it will invoke the `receive`method to read the message. 
+
+When the listener `closed`will be triggered, it will ensure that all messages in the queue will be processed before closing the canal. 
+
+## Event pump : 
+
+We will implement an event pump to process event tasks. 
+We will create an interface `event` for events. We can have only one event at once so we'll have a queue, FIFO, to register events. 
+
+In the event interface, we'll also have a method `void react()` thaht will be called when there is an event in the queue. 
+
+We use only one event pump for all the program, so no need to concurrency in this part of the code.
+
+### Event interface :
+
+Each event will implement the `Event` interface.
+
+## Executor : 
+
+This is used to execute events from several tasks. 
+We need to use only one executor to avoid concurrency. 
+
+*NB : If we used several executor, it would be "true parallelism.
+NB2 : Several are rarely used when we are in programmation oriented events.*
+
+We have this in the executor as the executor is a FIFO queue of events : 
+`LinkedList <Runnable> queue;`
+
+We'll have a synchronized method `post(Runnable r)`in this class that will 
+
+
+This method has to be synchronized as we are in a mixed implementation. If it was only event oriented, we would not need to put a sync because post would not be able to be called concurentially. 

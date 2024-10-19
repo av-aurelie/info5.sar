@@ -9,7 +9,7 @@ public class QueueBrokerImpl extends QueueBroker {
 	BrokerImpl broker;
 
 	/* Initialisation of a queueBroker */
-	QueueBrokerImpl(BrokerImpl broker) {
+	public QueueBrokerImpl(BrokerImpl broker) {
 		super(broker);
 		this.broker = broker;
 		

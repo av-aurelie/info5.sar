@@ -25,17 +25,21 @@ abstract class MessageQueue {
 	/*Sets a listener for the message queue. The listener will respond to various events like when a message 
 	 * is received, sent, or when the queue is closed.
 	 * @param : The listener that implements the listener interface.*/
-	void setListener(Listener l);
+	abstract void setListener(Listener l);
 
 	/*This method sends a message through the queue. 
 	 * @param : msg : the message to be sent 
 	 * @return true if the message has been successfully sent, false otherwise*/
-	boolean send(Message msg);
+	abstract boolean send(Message msg);
+	
+	/*This method is used to receive a message 
+	 * @return the message*/
+	abstract byte[] receive() throws Exception;
 
 	/*Closes the message queue. After this, no message can be sent or received.*/
-	void close();
+	abstract void close();
 
 	/*Checks if the message queue is closed
 	 * @return true if it's closed and false otherwise*/
-	boolean closed();
+	abstract boolean closed();
 }

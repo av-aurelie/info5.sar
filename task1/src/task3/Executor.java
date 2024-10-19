@@ -9,8 +9,8 @@ abstract public class Executor extends Thread {
 	/*This queue is FIFO queue*/
 	LinkedList <Runnable> queue;
 	
-	Executor(){
-		queue = new LinkedList <Runnable> ();
+	public Executor(){
+		this.queue = new LinkedList <Runnable> ();
 	}
 	/*Runs the first runnable from the queue*/
 	abstract public void run();

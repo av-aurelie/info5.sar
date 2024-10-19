@@ -1,20 +1,19 @@
 package task3;
 
 class Task {
-	
-	void post(Runnable r) {
-		
-	}
+    private Runnable runnable;
 
-	static Task task() {
-		return null;
-	}
+    // Constructor
+    Task(Runnable r) {
+        this.runnable = r;
+    }
 
-	void kill() {
-		
-	}
-
-	boolean killed() {
-		return true;
-	}
+    // Starts the task processing
+    public void start() {
+        new Thread(runnable).start(); // Start in a new thread
+    }
+    
+    public void stop() {
+        // Implement stop logic if necessary
+    }
 }

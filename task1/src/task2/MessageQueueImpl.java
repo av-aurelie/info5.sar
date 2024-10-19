@@ -16,7 +16,7 @@ public class MessageQueueImpl extends MessageQueue {
 	}
 
 	@Override
-	void send(byte[] bytes, int offset, int length) {
+	public void send(byte[] bytes, int offset, int length) {
 	    try {
 	        mutexSend.acquire();
 

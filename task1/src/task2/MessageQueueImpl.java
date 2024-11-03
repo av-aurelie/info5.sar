@@ -28,12 +28,19 @@ public class MessageQueueImpl extends MessageQueue {
 	        lengthBytes[3] = (byte) (length);
 
 	        // Send the message length first
-	        channel.write(lengthBytes, 0, 4);
+	        int bytesSentForLength = 0;
+	        while (bytesSentForLength < 4) {
+	            bytesSentForLength += channel.write(lengthBytes, bytesSentForLength, 4 - bytesSentForLength);
+	        }
 
 	        // Send the actual message in chunks if necessary
 	        int bytesSent = 0;
 	        while (bytesSent < length) {
-	            bytesSent += channel.write(bytes, offset + bytesSent, length - bytesSent);
+	            int written = 0;
+	            while (written < length - bytesSent) {
+	                written += channel.write(bytes, offset + bytesSent + written, length - bytesSent - written);
+	            }
+	            bytesSent += written;
 	        }
 	    } catch (InterruptedException e) {
 	        // Handle interrupted exception (if needed)
@@ -43,6 +50,7 @@ public class MessageQueueImpl extends MessageQueue {
 	        mutexSend.release();
 	    }
 	}
+
 
 
 	@Override
